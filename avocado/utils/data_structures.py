@@ -24,7 +24,7 @@ avocado core code or plugins.
 
 import sys
 import math
-from itertools import izip
+from builtins import zip
 
 
 def ordered_list_unique(object_list):
@@ -72,9 +72,9 @@ def compare_matrices(matrix1, matrix2, threshold=0.05):
     same = 0
     new_matrix = []
 
-    for line1, line2 in izip(matrix1, matrix2):
+    for line1, line2 in zip(matrix1, matrix2):
         new_line = []
-        elements = izip(line1, line2)
+        elements = zip(line1, line2)
         try:
             element1, element2 = elements.next()
         except StopIteration:             # no data in this row

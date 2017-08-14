@@ -28,7 +28,7 @@ And not notice until their code starts failing.
 import itertools
 import os.path
 import re
-from builtins import range
+from builtins import range, zip
 
 
 def bitlist_to_string(data):
@@ -182,11 +182,11 @@ def iter_tabular_output(matrix, header=None):
         # but later in `yield` we don't want it in `len_matrix`
         len_matrix[-1] = len_matrix[-1][:-1]
 
-    for row, row_lens in itertools.izip(str_matrix, len_matrix):
+    for row, row_lens in zip(str_matrix, len_matrix):
         out = []
         padding = [" " * (lengths[i] - row_lens[i])
                    for i in range(len(row_lens))]
-        out = ["%s%s" % line for line in itertools.izip(row, padding)]
+        out = ["%s%s" % line for line in zip(row, padding)]
         try:
             out.append(row[-1])
         except IndexError:

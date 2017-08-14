@@ -24,7 +24,7 @@ a custom Varianter plugin.
 import collections
 import itertools
 import re
-from builtins import range
+from builtins import (range, zip)
 
 from . import tree
 from . import varianter
@@ -180,7 +180,7 @@ class MuxPlugin(object):
         # TODO: Remove when 36lts is disconinued
         if not hasattr(self, "variant_ids"):
             self.variant_ids = self._get_variant_ids()
-        for vid, variant in itertools.izip(self.variant_ids, self.variants):
+        for vid, variant in zip(self.variant_ids, self.variants):
             yield {"variant_id": vid,
                    "variant": variant,
                    "mux_path": self.mux_path}
