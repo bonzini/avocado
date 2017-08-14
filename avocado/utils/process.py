@@ -268,7 +268,7 @@ class CmdResult(object):
     """
 
     def __init__(self, command="", stdout_bytes=b"", stderr_bytes=b"",
-                 exit_status=None, duration=0, pid=None):
+                 exit_status=None, duration=0, encoding='utf-8', pid=None):
         self.command = command
         self.exit_status = exit_status
         self.stdout_bytes = stdout_bytes
@@ -276,6 +276,7 @@ class CmdResult(object):
         self._stdout = None
         self._stderr = None
         self.duration = duration
+        self.encoding = encoding
         self.interrupted = False
         self.pid = pid
 
@@ -283,14 +284,14 @@ class CmdResult(object):
     def stdout(self):
         if self._stdout is not None:
             return self._stdout
-        self._stdout = self.stdout_bytes.decode('utf-8')
+        self._stdout = self.stdout_bytes.decode(self.encoding)
         return self._stdout
 
     @property
     def stderr(self):
         if self._stderr is not None:
             return self._stderr
-        self._stderr = self.stderr_bytes.decode('utf-8')
+        self._stderr = self.stderr_bytes.decode(self.encoding)
         return self._stderr
 
     def __repr__(self):
@@ -315,7 +316,7 @@ class SubProcess(object):
 
     def __init__(self, cmd, verbose=True, allow_output_check='all',
                  shell=False, env=None, sudo=False,
-                 ignore_bg_processes=False):
+                 ignore_bg_processes=False, encoding='utf-8'):
         """
         Creates the subprocess object, stdout/err, reader threads and locks.
 
@@ -354,7 +355,8 @@ class SubProcess(object):
         self.cmd = self._prepend_sudo(cmd, sudo, shell)
         self.verbose = verbose
         self.allow_output_check = allow_output_check
-        self.result = CmdResult(self.cmd)
+        self.encoding = encoding
+        self.result = CmdResult(self.cmd, encoding=self.encoding)
         self.shell = shell
         if env:
             self.env = os.environ.copy()
@@ -492,7 +494,7 @@ class SubProcess(object):
                     bfr += tmp
                     if tmp.endswith(b'\n'):
                         for line in bfr.splitlines():
-                            l = line.decode('utf-8', 'replace')
+                            l = line.decode(self.encoding, 'replace')
                             log.debug(prefix, l)
                             if stream_logger is not None:
                                 stream_logger.debug(stream_prefix, l)
@@ -502,7 +504,7 @@ class SubProcess(object):
         # Write the rest of the bfr unfinished by \n
         if self.verbose and bfr:
             for line in bfr.splitlines():
-                l = line.decode('utf-8', 'replace')
+                l = line.decode(self.encoding, 'replace')
                 log.debug(prefix, l)
                 if stream_logger is not None:
                     stream_logger.debug(stream_prefix, l)
@@ -690,7 +692,7 @@ class WrapSubProcess(SubProcess):
 
     def __init__(self, cmd, verbose=True, allow_output_check='all',
                  shell=False, env=None, wrapper=None, sudo=False,
-                 ignore_bg_processes=False):
+                 ignore_bg_processes=False, encoding='utf-8'):
         if wrapper is None and CURRENT_WRAPPER is not None:
             wrapper = CURRENT_WRAPPER
         self.wrapper = wrapper
@@ -700,7 +702,7 @@ class WrapSubProcess(SubProcess):
             cmd = wrapper + ' ' + cmd
         super(WrapSubProcess, self).__init__(cmd, verbose, allow_output_check,
                                              shell, env, sudo,
-                                             ignore_bg_processes)
+                                             ignore_bg_processes, encoding)
 
 
 class GDBSubProcess(object):
@@ -710,7 +712,8 @@ class GDBSubProcess(object):
     """
 
     def __init__(self, cmd, verbose=True, allow_output_check='all',
-                 shell=False, env=None, sudo=False, ignore_bg_processes=False):
+                 shell=False, env=None, sudo=False, ignore_bg_processes=False,
+                 encoding='utf-8'):
         """
         Creates the subprocess object, stdout/err, reader threads and locks.
 
@@ -742,7 +745,7 @@ class GDBSubProcess(object):
         self.args = shlex.split(cmd)
         self.binary = self.args[0]
         self.binary_path = os.path.abspath(self.cmd)
-        self.result = CmdResult(cmd)
+        self.result = CmdResult(cmd, encoding=encoding)
 
         self.gdb_server = gdb.GDBServer(gdb.GDBSERVER_PATH)
         self.gdb = gdb.GDB(gdb.GDB_PATH)
@@ -1086,7 +1089,7 @@ def get_sub_process_klass(cmd):
 
 def run(cmd, timeout=None, verbose=True, ignore_status=False,
         allow_output_check='all', shell=False, env=None, sudo=False,
-        ignore_bg_processes=False):
+        ignore_bg_processes=False, encoding='utf-8'):
     """
     Run a subprocess, returning a CmdResult object.
 
@@ -1128,7 +1131,8 @@ def run(cmd, timeout=None, verbose=True, ignore_status=False,
     klass = get_sub_process_klass(cmd)
     sp = klass(cmd=cmd, verbose=verbose,
                allow_output_check=allow_output_check, shell=shell, env=env,
-               sudo=sudo, ignore_bg_processes=ignore_bg_processes)
+               sudo=sudo, ignore_bg_processes=ignore_bg_processes,
+               encoding=encoding)
     cmd_result = sp.run(timeout=timeout)
     fail_condition = cmd_result.exit_status != 0 or cmd_result.interrupted
     if fail_condition and not ignore_status:
@@ -1138,7 +1142,7 @@ def run(cmd, timeout=None, verbose=True, ignore_status=False,
 
 def system(cmd, timeout=None, verbose=True, ignore_status=False,
            allow_output_check='all', shell=False, env=None, sudo=False,
-           ignore_bg_processes=False):
+           ignore_bg_processes=False, encoding='utf-8'):
     """
     Run a subprocess, returning its exit code.
 
@@ -1180,13 +1184,13 @@ def system(cmd, timeout=None, verbose=True, ignore_status=False,
     """
     cmd_result = run(cmd=cmd, timeout=timeout, verbose=verbose, ignore_status=ignore_status,
                      allow_output_check=allow_output_check, shell=shell, env=env,
-                     sudo=sudo, ignore_bg_processes=ignore_bg_processes)
+                     sudo=sudo, ignore_bg_processes=ignore_bg_processes, encoding=encoding)
     return cmd_result.exit_status
 
 
 def system_output(cmd, timeout=None, verbose=True, ignore_status=False,
                   allow_output_check='all', shell=False, env=None, sudo=False,
-                  ignore_bg_processes=False, strip_trail_nl=True):
+                  ignore_bg_processes=False, strip_trail_nl=True, encoding='utf-8'):
     """
     Run a subprocess, returning its output.
 
@@ -1232,7 +1236,7 @@ def system_output(cmd, timeout=None, verbose=True, ignore_status=False,
     """
     cmd_result = run(cmd=cmd, timeout=timeout, verbose=verbose, ignore_status=ignore_status,
                      allow_output_check=allow_output_check, shell=shell, env=env,
-                     sudo=sudo, ignore_bg_processes=ignore_bg_processes)
+                     sudo=sudo, ignore_bg_processes=ignore_bg_processes, encoding=encoding)
     if strip_trail_nl:
         return cmd_result.stdout.rstrip('\n\r')
     return cmd_result.stdout
