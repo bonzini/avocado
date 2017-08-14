@@ -37,9 +37,9 @@ except ImportError:
     SUBPROCESS32_SUPPORT = False
 
 try:
-    from StringIO import StringIO
+    from BytesIO import BytesIO
 except ImportError:
-    from io import StringIO
+    from io import BytesIO
 
 from . import gdb
 from . import runtime
@@ -267,15 +267,31 @@ class CmdResult(object):
     :param pid: ID of the process
     """
 
-    def __init__(self, command="", stdout="", stderr="",
+    def __init__(self, command="", stdout_bytes=b"", stderr_bytes=b"",
                  exit_status=None, duration=0, pid=None):
         self.command = command
         self.exit_status = exit_status
-        self.stdout = stdout
-        self.stderr = stderr
+        self.stdout_bytes = stdout_bytes
+        self.stderr_bytes = stderr_bytes
+        self._stdout = None
+        self._stderr = None
         self.duration = duration
         self.interrupted = False
         self.pid = pid
+
+    @property
+    def stdout(self):
+        if self._stdout is not None:
+            return self._stdout
+        self._stdout = self.stdout_bytes.decode('utf-8')
+        return self._stdout
+
+    @property
+    def stderr(self):
+        if self._stderr is not None:
+            return self._stderr
+        self._stderr = self.stderr_bytes.decode('utf-8')
+        return self._stderr
 
     def __repr__(self):
         cmd_rep = ("Command: %s\n"
@@ -402,8 +418,8 @@ class SubProcess(object):
                 raise details
 
             self.start_time = time.time()
-            self.stdout_file = StringIO()
-            self.stderr_file = StringIO()
+            self.stdout_file = BytesIO()
+            self.stderr_file = BytesIO()
             self.stdout_lock = threading.Lock()
             ignore_bg_processes = self._ignore_bg_processes
             self.stdout_thread = threading.Thread(target=self._fd_drainer,
@@ -456,7 +472,7 @@ class SubProcess(object):
 
         fileno = input_pipe.fileno()
 
-        bfr = ''
+        bfr = bytes()
         while True:
             if ignore_bg_processes:
                 # Exit if there are no new data and the main process finished
@@ -467,27 +483,29 @@ class SubProcess(object):
                 if not select.select([fileno], [], [], 1)[0]:
                     continue
             tmp = os.read(fileno, 8192)
-            if tmp == '':
+            if len(tmp) == 0:
                 break
             lock.acquire()
             try:
                 output_file.write(tmp)
                 if self.verbose:
                     bfr += tmp
-                    if tmp.endswith('\n'):
+                    if tmp.endswith(b'\n'):
                         for line in bfr.splitlines():
-                            log.debug(prefix, line)
+                            l = line.decode('utf-8', 'replace')
+                            log.debug(prefix, l)
                             if stream_logger is not None:
-                                stream_logger.debug(stream_prefix, line)
-                        bfr = ''
+                                stream_logger.debug(stream_prefix, l)
+                        bfr = bytes()
             finally:
                 lock.release()
         # Write the rest of the bfr unfinished by \n
         if self.verbose and bfr:
             for line in bfr.splitlines():
-                log.debug(prefix, line)
+                l = line.decode('utf-8', 'replace')
+                log.debug(prefix, l)
                 if stream_logger is not None:
-                    stream_logger.debug(stream_prefix, line)
+                    stream_logger.debug(stream_prefix, l)
 
     def _fill_results(self, rc):
         self._init_subprocess()
@@ -510,8 +528,8 @@ class SubProcess(object):
         # Clean subprocess pipes and populate stdout/err
         self._popen.stdout.close()
         self._popen.stderr.close()
-        self.result.stdout = self.get_stdout()
-        self.result.stderr = self.get_stderr()
+        self.result.stdout_bytes = self.get_stdout()
+        self.result.stderr_bytes = self.get_stderr()
 
     def start(self):
         """
@@ -973,10 +991,10 @@ class GDBSubProcess(object):
                 if current_test is not None:
                     if os.path.exists(self.gdb_server.stdout_path):
                         shutil.copy(self.gdb_server.stdout_path, stdout_path)
-                        self.result.stdout = open(stdout_path, 'r').read()
+                        self.result.stdout_bytes = open(stdout_path, 'rb').read()
                     if os.path.exists(self.gdb_server.stderr_path):
                         shutil.copy(self.gdb_server.stderr_path, stderr_path)
-                        self.result.stderr = open(stderr_path, 'r').read()
+                        self.result.stderr_bytes = open(stderr_path, 'rb').read()
 
                 self.gdb_server.exit()
                 return self.result
