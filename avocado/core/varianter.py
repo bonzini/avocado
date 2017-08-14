@@ -21,6 +21,7 @@ Multiplex and create variants.
 
 import hashlib
 import re
+from builtins import range
 
 from . import tree
 from . import dispatcher
@@ -276,7 +277,7 @@ class AvocadoParam(object):
         Get all leaves matching the path
         """
         return [self._leaves[i]
-                for i in xrange(len(self._leaf_names))
+                for i in range(len(self._leaf_names))
                 if path.search(self._leaf_names[i])]
 
     def get_or_die(self, path, key):

@@ -24,6 +24,7 @@ a custom Varianter plugin.
 import collections
 import itertools
 import re
+from builtins import range
 
 from . import tree
 from . import varianter
@@ -127,7 +128,7 @@ class MuxTree(object):
             remove = 0
             path = node.path + '/'
             ppath = path.rsplit('/', 2)[0] + '/'
-            for i in xrange(len(filter_only)):
+            for i in range(len(filter_only)):
                 level = filter_only[i].count('/')
                 if level < max(keep, remove):
                     continue

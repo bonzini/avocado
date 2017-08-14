@@ -30,6 +30,7 @@ import sys
 import shutil
 import time
 import tempfile
+from builtins import range
 
 from . import job_id
 from . import settings
@@ -173,7 +174,7 @@ def create_job_logs_dir(logdir=None, unique_id=None):
         unique_id = job_id.create_unique_job_id()
 
     debugdir = os.path.join(logdir, 'job-%s-%s' % (start_time, unique_id[:7]))
-    for i in xrange(7, len(unique_id)):
+    for i in range(7, len(unique_id)):
         try:
             os.mkdir(debugdir)
         except OSError:
@@ -181,7 +182,7 @@ def create_job_logs_dir(logdir=None, unique_id=None):
             continue
         return debugdir
     debugdir += "."
-    for i in xrange(1000):
+    for i in range(1000):
         try:
             os.mkdir(debugdir + str(i))
         except OSError:

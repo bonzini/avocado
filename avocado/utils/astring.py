@@ -28,6 +28,7 @@ And not notice until their code starts failing.
 import itertools
 import os.path
 import re
+from builtins import range
 
 
 def bitlist_to_string(data):
@@ -184,7 +185,7 @@ def iter_tabular_output(matrix, header=None):
     for row, row_lens in itertools.izip(str_matrix, len_matrix):
         out = []
         padding = [" " * (lengths[i] - row_lens[i])
-                   for i in xrange(len(row_lens))]
+                   for i in range(len(row_lens))]
         out = ["%s%s" % line for line in itertools.izip(row, padding)]
         try:
             out.append(row[-1])

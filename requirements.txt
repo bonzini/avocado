@@ -1,4 +1,5 @@
 # Avocado functional requirements
+future>=0.16.0
 # .tar.xz support (avocado.utils.archive)
 pyliblzma>=0.5.3
 # REST client (avocado.core.restclient)

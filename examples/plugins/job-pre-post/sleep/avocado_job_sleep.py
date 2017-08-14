@@ -1,4 +1,5 @@
 import time
+from builtins import range
 
 from avocado.core.output import LOG_UI
 from avocado.core.settings import settings
@@ -17,7 +18,7 @@ class Sleep(JobPre, JobPost):
                                           default=3)
 
     def sleep(self, job):
-        for i in xrange(1, self.seconds + 1):
+        for i in range(1, self.seconds + 1):
             LOG_UI.info("Sleeping %2i/%s", i, self.seconds)
             time.sleep(1)
 

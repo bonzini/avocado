@@ -13,6 +13,7 @@ pygraphviz==1.3rc2
 mock==1.2.0
 aexpect==1.0.0
 psutil==3.1.1
+future==0.16.0
 # stevedore for loading "new style" plugins
 stevedore==1.20.0
 lxml>=3.4.4

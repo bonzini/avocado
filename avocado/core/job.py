@@ -26,6 +26,7 @@ import sys
 import tempfile
 import time
 import traceback
+from builtins import range
 
 from . import version
 from . import data_dir
@@ -305,7 +306,7 @@ class Job(object):
 
         if not getattr(self.args, "dry_run", False):
             return suite
-        for i in xrange(len(suite)):
+        for i in range(len(suite)):
             suite[i] = [test.DryRunTest, suite[i][1]]
         return suite
 

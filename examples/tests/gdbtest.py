@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import os
+from builtins import range
 
 from avocado import Test
 from avocado import main
@@ -58,10 +59,10 @@ class GdbTest(Test):
         self.log.info("Testing execution of multiple GDB instances")
         process_count = 10
         gdb_instances = []
-        for i in xrange(0, process_count):
+        for i in range(0, process_count):
             gdb_instances.append(gdb.GDB())
 
-        for i in xrange(0, process_count):
+        for i in range(0, process_count):
             self.assertEqual(gdb_instances[i].exit(), 0)
 
     def test_existing_commands_raw(self):
@@ -188,7 +189,7 @@ class GdbTest(Test):
         g = gdb.GDB()
 
         # Do 100 cycle of target (kind of connects) and disconnects
-        for i in xrange(0, 100):
+        for i in range(0, 100):
             cmd = '-target-select extended-remote :%s' % s.port
             r = g.cmd(cmd)
             self.assertEqual(r.result.class_, 'connected')
@@ -213,7 +214,7 @@ class GdbTest(Test):
         s = gdb.GDBServer()
         g = gdb.GDB()
 
-        for i in xrange(0, 100):
+        for i in range(0, 100):
             r = g.connect(s.port)
             self.assertEqual(r.result.class_, 'connected')
             r = g.disconnect()
@@ -295,7 +296,7 @@ class GdbTest(Test):
         self.log.info("Testing execution of multiple GDB server instances")
         process_count = 10
         server_instances = []
-        for i in xrange(0, process_count):
+        for i in range(0, process_count):
             s = gdb.GDBServer()
             c = gdb.GDB()
             c.connect(s.port)
@@ -303,7 +304,7 @@ class GdbTest(Test):
             c.disconnect()
             server_instances.append(s)
 
-        for i in xrange(0, process_count):
+        for i in range(0, process_count):
             self.assertTrue(self.is_process_alive(server_instances[i].process))
             server_instances[i].exit()
             self.assertFalse(self.is_process_alive(server_instances[i].process))

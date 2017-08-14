@@ -4,6 +4,7 @@ avocado.utils.lv_utils selftests
 :copyright: 2016 Red Hat, Inc
 """
 from __future__ import print_function
+from builtins import range
 from avocado.utils import process, lv_utils
 import glob
 import os
@@ -55,7 +56,7 @@ class LVUtilsTest(unittest.TestCase):
             disk = disks.pop()
             self.assertEqual(lv_utils.get_diskspace(disk), "8388608")
         except BaseException:
-            for _ in xrange(10):
+            for _ in range(10):
                 res = process.run("rmmod scsi_debug", ignore_status=True,
                                   sudo=True)
                 if not res.exit_status:
@@ -63,7 +64,7 @@ class LVUtilsTest(unittest.TestCase):
                     break
             else:
                 print("Fail to remove scsi_debug: %s" % res)
-        for _ in xrange(10):
+        for _ in range(10):
             res = process.run("rmmod scsi_debug", ignore_status=True,
                               sudo=True)
             if not res.exit_status:
